@@ -10,6 +10,9 @@
     "pages:build": "pnpm next-on-pages",
     "preview": "pnpm pages:build && wrangler pages dev",
     "deploy": "pnpm pages:build && wrangler pages deploy",
+    "db:create": "wrangler d1 create chat-db",
+    "db:init": "wrangler d1 execute chat-db --file=./db/schema.sql",
+    "db:init-remote": "wrangler d1 execute chat-db --remote --file=./db/schema.sql",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts"
   },
   "dependencies": {

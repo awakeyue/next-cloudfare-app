@@ -1,10 +1,12 @@
 'use client'
 import { Input } from '@/components/ui/input'
-import { useState } from 'react'
-import { ReactTyped } from 'react-typed'
+import { useRef, useState } from 'react'
+import { marked } from 'marked'
+import './markdown.css'
 
 export default function Page() {
-  const [text, setText] = useState<string[]>([])
+  const [content, setContent] = useState('')
+  const contentRef = useRef<HTMLDivElement>(null)
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       const input = e.target as HTMLInputElement
@@ -25,7 +27,7 @@ export default function Page() {
           },
           {
             role: 'system',
-            content: `好的，现在开始，你说一个菜名，我会给你回复这道菜的制作步骤`,
+            content: `好的，现在开始，你说一个菜名，我会给你回复这道菜详细的制作步骤和注意事项`,
           },
           {
             role: 'user',
@@ -48,13 +50,23 @@ export default function Page() {
         break
       }
       const chunkValue = decoder.decode(value)
-      const valueString = chunkValue.slice(5)
-      try {
-        const data = JSON.parse(valueString)
-        const message = data.choices[0].delta.content
-        setText((prev) => [...prev, message])
-      } catch (error) {
-        console.log('json 解析失败', error)
+      const splitLines = chunkValue.split('\n').filter((item) => item !== '')
+      for (const line of splitLines) {
+        const dataString = line.split('data:')[1]
+        if (dataString.trim() === '[DONE]') {
+          break
+        }
+        try {
+          const data = JSON.parse(dataString)
+          // setContent((content) => content + data.choices[0].delta.content)
+          setContent((content) => {
+            const newContent = content + data.choices[0].delta.content
+            contentRef.current!.innerHTML = marked(newContent) as string
+            return newContent
+          })
+        } catch (error) {
+          console.log('json 解析失败', error)
+        }
       }
     }
   }
@@ -62,19 +74,13 @@ export default function Page() {
     <div className="flex justify-center">
       <div className="mt-[20vh] flex w-[90vw] flex-col md:w-[50vw]">
         <h2 className="typing mb-5 text-2xl font-bold">
-          <ReactTyped
-            strings={['AI菜谱，自动为您生成做菜步骤，让烹饪变得更简单']}
-            typeSpeed={60}
-            backSpeed={20}
-            backDelay={2000}
-            loop
-          ></ReactTyped>
+          AI菜谱，自动为您生成做菜步骤，让烹饪变得更简单
         </h2>
         <div>
           <Input placeholder="请输入菜名" onKeyUp={handleKeyUp}></Input>
         </div>
-        <div>
-          <ReactTyped strings={text} typeSpeed={60}></ReactTyped>
+        <div className="mt-4">
+          <div className="markdown-body" ref={contentRef}></div>
         </div>
       </div>
     </div>

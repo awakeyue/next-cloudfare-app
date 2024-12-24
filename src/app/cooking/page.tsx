@@ -7,13 +7,16 @@ import './markdown.css'
 import { Save } from 'lucide-react'
 
 export default function Page() {
+  const [value, setValue] = useState('')
   const [content, setContent] = useState('')
 
+  const handleGenerate = () => {
+    setContent('')
+    fetchCookingTutorial(value)
+  }
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      const input = e.target as HTMLInputElement
-      const value = input.value
-      fetchCookingTutorial(value)
+      handleGenerate()
     }
   }
   const fetchCookingTutorial = async (value: string) => {
@@ -78,8 +81,12 @@ export default function Page() {
           AI菜谱，自动为您生成做菜步骤，让烹饪变得更简单
         </h2>
         <div className="flex gap-2">
-          <Input placeholder="请输入菜名" onKeyUp={handleKeyUp}></Input>
-          <Button>生成菜谱</Button>
+          <Input
+            placeholder="请输入菜名"
+            onChange={(e) => setValue(e.target.value)}
+            onKeyUp={handleKeyUp}
+          ></Input>
+          <Button onClick={handleGenerate}>生成菜谱</Button>
         </div>
         {content && (
           <div className="my-4">

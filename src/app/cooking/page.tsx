@@ -1,12 +1,14 @@
 'use client'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { useRef, useState } from 'react'
 import { marked } from 'marked'
 import './markdown.css'
+import { Save } from 'lucide-react'
 
 export default function Page() {
   const [content, setContent] = useState('')
-  const contentRef = useRef<HTMLDivElement>(null)
+
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       const input = e.target as HTMLInputElement
@@ -58,10 +60,9 @@ export default function Page() {
         }
         try {
           const data = JSON.parse(dataString)
-          // setContent((content) => content + data.choices[0].delta.content)
+          console.log(data.choices[0].delta.content)
           setContent((content) => {
             const newContent = content + data.choices[0].delta.content
-            contentRef.current!.innerHTML = marked(newContent) as string
             return newContent
           })
         } catch (error) {
@@ -76,12 +77,25 @@ export default function Page() {
         <h2 className="typing mb-5 text-2xl font-bold">
           AI菜谱，自动为您生成做菜步骤，让烹饪变得更简单
         </h2>
-        <div>
+        <div className="flex gap-2">
           <Input placeholder="请输入菜名" onKeyUp={handleKeyUp}></Input>
+          <Button>生成菜谱</Button>
         </div>
-        <div className="mt-4">
-          <div className="markdown-body" ref={contentRef}></div>
-        </div>
+        {content && (
+          <div className="my-4">
+            <div className="mb-1 flex justify-end">
+              <Button size={'sm'} variant={'ghost'}>
+                <Save />
+              </Button>
+            </div>
+            <div
+              className="markdown-body rounded-md border border-solid border-gray-200 p-4"
+              dangerouslySetInnerHTML={{
+                __html: marked(content),
+              }}
+            ></div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -5,10 +5,12 @@ import { useRef, useState } from 'react'
 import { marked } from 'marked'
 import './markdown.css'
 import { Save } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Page() {
   const [value, setValue] = useState('')
   const [content, setContent] = useState('')
+  const { toast } = useToast()
 
   const handleGenerate = () => {
     setContent('')
@@ -17,6 +19,27 @@ export default function Page() {
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleGenerate()
+    }
+  }
+  const handleSave = async () => {
+    const res = await fetch('/api/recipes', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: value,
+        content,
+      }),
+    })
+    const data = (await res.json()) as any
+    if (data.code === 0) {
+      toast({
+        description: '保存成功',
+        variant: 'default',
+      })
+    } else {
+      toast({
+        description: '保存失败',
+        variant: 'destructive',
+      })
     }
   }
   const fetchCookingTutorial = async (value: string) => {
@@ -63,7 +86,6 @@ export default function Page() {
         }
         try {
           const data = JSON.parse(dataString)
-          console.log(data.choices[0].delta.content)
           setContent((content) => {
             const newContent = content + data.choices[0].delta.content
             return newContent
@@ -91,7 +113,7 @@ export default function Page() {
         {content && (
           <div className="my-4">
             <div className="mb-1 flex justify-end">
-              <Button size={'sm'} variant={'ghost'}>
+              <Button size={'sm'} variant={'ghost'} onClick={handleSave}>
                 <Save />
               </Button>
             </div>

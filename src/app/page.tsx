@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   Card,
@@ -7,19 +7,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
-export function ButtonDemo() {
-  return <Button>Button</Button>;
-}
-
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from 'next/image'
+import Link from 'next/link'
 
 export default function Home() {
   return (
-    <main className="flex  flex-wrap p-4">
+    <main className="flex flex-wrap p-4">
       <Card>
         <CardHeader>
           <CardTitle>AI菜谱</CardTitle>
@@ -44,5 +40,5 @@ export default function Home() {
         </CardFooter>
       </Card>
     </main>
-  );
+  )
 }

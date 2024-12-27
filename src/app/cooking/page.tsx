@@ -10,11 +10,13 @@ import { useToast } from '@/hooks/use-toast'
 export default function Page() {
   const [value, setValue] = useState('')
   const [content, setContent] = useState('')
+  const [imgUrl, setImgUrl] = useState('')
   const { toast } = useToast()
 
   const handleGenerate = () => {
     setContent('')
     fetchCookingTutorial(value)
+    fetchImage()
   }
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -27,6 +29,7 @@ export default function Page() {
       body: JSON.stringify({
         title: value,
         content,
+        image_url: imgUrl,
       }),
     })
     const data = (await res.json()) as any
@@ -40,6 +43,28 @@ export default function Page() {
         description: '保存失败',
         variant: 'destructive',
       })
+    }
+  }
+  const fetchImage = async () => {
+    const res = await fetch(process.env.NEXT_PUBLIC_AI_API_URL_IMG, {
+      method: 'POST',
+      body: JSON.stringify({
+        model: 'Cogview-3-Flash',
+        prompt: value,
+        size: '1344x768',
+      }),
+      headers: {
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_AI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = (await res.json()) as any
+    const url = data.data?.[0]?.url
+    if (url) {
+      setContent((content) => {
+        return `![${value}](${url})\n\n` + content
+      })
+      setImgUrl(url)
     }
   }
   const fetchCookingTutorial = async (value: string) => {

@@ -30,7 +30,10 @@ export default function Page() {
   return (
     <div className="flex flex-wrap p-4">
       {list.map((item) => (
-        <div key={item.id} className="w-1/3 p-2 md:w-1/5">
+        <div
+          key={item.id}
+          className="w-1/2 p-2 sm:w-1/3 md:w-1/4 lg:w-1/5 xl:w-1/6"
+        >
           <Card>
             <CardHeader>
               <CardTitle>{item.title}</CardTitle>
@@ -38,12 +41,16 @@ export default function Page() {
             </CardHeader>
             <CardContent>
               <div>
-                <Image
-                  src={item.image_url}
-                  width={200}
-                  height={200}
-                  alt=""
-                ></Image>
+                {item.image_url && (
+                  <Image
+                    src={item.image_url}
+                    width={0}
+                    height={0}
+                    sizes="100vw"
+                    alt=""
+                    className="h-auto w-full object-contain"
+                  ></Image>
+                )}
               </div>
             </CardContent>
             <CardFooter>

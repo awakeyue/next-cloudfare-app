@@ -10,6 +10,16 @@ if (process.env.NODE_ENV === 'development') {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'aigc-files.bigmodel.cn',
+        port: '',
+        pathname: '**',
+      },
+    ],
+  },
 }
 
 export default nextConfig

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getRequestContext } from '@cloudflare/next-on-pages'
 import { Recipe } from '#/recipes'
+import { z } from 'zod'
 
 export const runtime = 'edge'
 
@@ -20,6 +21,11 @@ export async function GET() {
 }
 
 // POST /api/recipes - 创建新菜谱
+const RecipeSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  image_url: z.string().optional(),
+})
 export async function POST(request: Request) {
   try {
     const { title, content, image_url = '' }: Recipe = await request.json()

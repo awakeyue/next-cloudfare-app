@@ -37,6 +37,17 @@ export async function POST(request: Request) {
     }
 
     const db = getRequestContext().env.DB
+    // title不能重名
+    const titleExists = await db
+      .prepare('SELECT * FROM recipes WHERE title = ?')
+      .bind(title)
+      .first()
+    if (titleExists) {
+      return NextResponse.json({
+        code: -1,
+        error: '菜谱名称已存在',
+      })
+    }
     const res = await db
       .prepare(
         'INSERT INTO recipes (title, content, image_url) VALUES (?, ?, ?)'

@@ -7,12 +7,38 @@ import './markdown.css'
 import { BookAudio, Save } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+
+interface ApiResponse {
+  code: number
+  data?: {
+    updated?: boolean
+    exists?: boolean
+    id?: number
+  }
+  error?: string
+}
 
 export default function Page() {
   const [value, setValue] = useState('')
   const [content, setContent] = useState('')
   const [imgUrl, setImgUrl] = useState('')
   const { toast } = useToast()
+  const [showReplaceAlert, setShowReplaceAlert] = useState(false)
+  const [pendingRecipe, setPendingRecipe] = useState<{
+    title: string
+    content: string
+    image_url: string
+  } | null>(null)
 
   const handleGenerate = () => {
     setContent('')
@@ -24,26 +50,51 @@ export default function Page() {
       handleGenerate()
     }
   }
-  const handleSave = async () => {
-    const res = await fetch('/api/recipes', {
-      method: 'POST',
-      body: JSON.stringify({
-        title: value,
-        content,
-        image_url: imgUrl,
-      }),
-    })
-    const data = (await res.json()) as any
-    if (data.code === 0) {
-      toast({
-        description: '保存成功',
-        variant: 'default',
+  const handleSave = async (force: boolean = false) => {
+    const recipeData = {
+      title: value,
+      content,
+      image_url: imgUrl,
+    }
+
+    try {
+      const res = await fetch(`/api/recipes${force ? '?force=true' : ''}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(recipeData),
       })
-    } else {
+
+      const data = (await res.json()) as ApiResponse
+
+      if (data.code === 0) {
+        toast({
+          description: data.data?.updated ? '菜谱更新成功' : '菜谱创建成功',
+          variant: 'default',
+        })
+      } else if (data.code === -1 && data.data?.exists) {
+        // 菜名重复的情况
+        setPendingRecipe(recipeData)
+        setShowReplaceAlert(true)
+      } else {
+        toast({
+          description: data.error || '保存失败',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
       toast({
         description: '保存失败',
         variant: 'destructive',
       })
+    }
+  }
+  const handleReplaceConfirm = async () => {
+    if (pendingRecipe) {
+      await handleSave(true)
+      setShowReplaceAlert(false)
+      setPendingRecipe(null)
     }
   }
   const fetchImage = async () => {
@@ -144,7 +195,11 @@ export default function Page() {
         {content && (
           <div className="my-4">
             <div className="mb-1 flex justify-end">
-              <Button size={'sm'} variant={'ghost'} onClick={handleSave}>
+              <Button
+                size={'sm'}
+                variant={'ghost'}
+                onClick={() => handleSave(false)}
+              >
                 <Save />
               </Button>
             </div>
@@ -157,6 +212,30 @@ export default function Page() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={showReplaceAlert} onOpenChange={setShowReplaceAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>菜谱名称已存在</AlertDialogTitle>
+            <AlertDialogDescription>
+              已存在同名菜谱【{pendingRecipe?.title}】，是否要替换原有内容？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setShowReplaceAlert(false)
+                setPendingRecipe(null)
+              }}
+            >
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleReplaceConfirm}>
+              确认替换
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Home } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -86,6 +86,15 @@ export default function Page() {
   }, [])
   return (
     <>
+      <div className="p-4">
+        <Button variant="ghost" asChild>
+          <Link replace href="/cooking">
+            <Home className="mr-2 h-4 w-4" />
+            返回首页
+          </Link>
+        </Button>
+      </div>
+
       {loading && <ListSkeleton />}
       {!loading && (
         <div className="flex flex-wrap p-4">

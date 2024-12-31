@@ -1,13 +1,13 @@
-'use client' // 声明为客户端组件
+'use client'
+
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import MdEditor from 'react-markdown-editor-lite'
-import 'react-markdown-editor-lite/lib/index.css'
-import '../../markdown.css' // 引入 Markdown 样式
+import MDEditor from '@uiw/react-md-editor'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { marked } from 'marked'
 import { useToast } from '@/hooks/use-toast'
+import Link from 'next/link'
 
 interface Recipe {
   id: string
@@ -20,7 +20,6 @@ export default function EditPage() {
   const [content, setContent] = useState('')
   const [imageUrl, setImageUrl] = useState('')
 
-  const editor = useRef<MdEditor>(null)
   const { toast } = useToast()
   const params = useParams()
   const id = params.id as string
@@ -33,7 +32,6 @@ export default function EditPage() {
       const recipe = data.data as Recipe
       setTitle(recipe.title)
       setContent(recipe.content)
-      editor.current?.setText(recipe.content)
     }
   }
 
@@ -55,18 +53,16 @@ export default function EditPage() {
     }
   }
 
-  const handleChange = ({ html, text }: { html: string; text: string }) => {
+  const handleChange = (text: string) => {
     setContent(text)
-    const regex = /<img [^>]*src="([^"]+)"/i
-    const match = html.match(regex)
+    const regex = /!\[.*?\]\((.*?)\)/
+    const match = text.match(regex)
     setImageUrl(match ? match[1] : '')
   }
 
   useEffect(() => {
-    if (id) {
-      getData(id)
-    }
-  }, [id])
+    getData(id)
+  }, [])
 
   return (
     <div className="flex h-[100vh] flex-col items-center bg-gray-50 p-6">
@@ -83,19 +79,22 @@ export default function EditPage() {
           />
 
           <div className="min-h-0 flex-1 gap-6 overflow-y-auto rounded-lg">
-            {content && (
-              <MdEditor
-                ref={editor}
-                renderHTML={(text) => marked(text)}
-                onChange={handleChange}
-                style={{ height: '100%' }}
+            {
+              <MDEditor
+                value={content}
+                onChange={(text) => handleChange(text ? text : '')}
+                height={'100%'}
               />
-            )}
+            }
           </div>
 
           {/* Actions */}
           <div className="flex items-center justify-end space-x-4">
-            <Button variant="outline">取消</Button>
+            <Button variant="outline">
+              <Link replace href="/cooking/list">
+                取消
+              </Link>
+            </Button>
             <Button onClick={handleSave}>保存</Button>
           </div>
         </div>

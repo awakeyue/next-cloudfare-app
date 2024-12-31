@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button'
 import { useRef, useState } from 'react'
 import { marked } from 'marked'
 import './markdown.css'
-import { Save } from 'lucide-react'
+import { BookAudio, Save } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import Link from 'next/link'
 
 export default function Page() {
   const [value, setValue] = useState('')
@@ -133,6 +134,11 @@ export default function Page() {
             onChange={(e) => setValue(e.target.value)}
             onKeyUp={handleKeyUp}
           ></Input>
+          <Button variant={'ghost'}>
+            <Link href={'/cooking/list'}>
+              <BookAudio />
+            </Link>
+          </Button>
           <Button onClick={handleGenerate}>生成菜谱</Button>
         </div>
         {content && (

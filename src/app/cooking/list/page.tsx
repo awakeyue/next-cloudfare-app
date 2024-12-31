@@ -100,7 +100,7 @@ export default function Page() {
                   {/* <CardDescription>输入菜名，自动生成做菜步骤</CardDescription> */}
                 </CardHeader>
                 <CardContent>
-                  <div>
+                  <div className="bg-slate-300">
                     {item.image_url && (
                       <Image
                         src={item.image_url}
@@ -108,7 +108,8 @@ export default function Page() {
                         height={0}
                         sizes="100vw"
                         alt=""
-                        className="h-auto w-full object-contain"
+                        placeholder="empty"
+                        className="h-[160px] w-full object-contain"
                       ></Image>
                     )}
                   </div>
@@ -125,7 +126,9 @@ export default function Page() {
                       <Trash2 />
                       删除
                     </Button>
-
+                    <Button variant="link">
+                      <Link href={'/cooking/edit/' + item.id}>编辑</Link>
+                    </Button>
                     <Button>
                       <Link href={'/cooking/list/' + item.id}>查看</Link>
                     </Button>

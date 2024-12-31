@@ -18,6 +18,12 @@ const nextConfig = {
         port: '',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 's21.ax1x.com',
+        port: '',
+        pathname: '**',
+      },
     ],
   },
 }

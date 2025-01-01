@@ -6,17 +6,57 @@ import { z } from 'zod'
 export const runtime = 'edge'
 
 // GET /api/recipes - 获取所有菜谱列表
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const search = searchParams.get('search')
+    console.log(search)
+    const page = parseInt(searchParams.get('page') || '1')
+    const pageSize = parseInt(searchParams.get('size') || '10')
+
+    const offset = (page - 1) * pageSize
+
     const db = getRequestContext().env.DB
-    const res = await db.prepare('SELECT * FROM recipes').all()
+    let query = 'SELECT * FROM recipes'
+    let countQuery = 'SELECT COUNT(*) as total FROM recipes'
+    let params: any[] = []
+    let countParams: any[] = []
+
+    if (search) {
+      query = 'SELECT * FROM recipes WHERE title LIKE ? LIMIT ? OFFSET ?'
+      countQuery = 'SELECT COUNT(*) as total FROM recipes WHERE title LIKE ?'
+      params = [`%${search}%`, pageSize, offset]
+      countParams = [`%${search}%`]
+    } else {
+      query += ' LIMIT ? OFFSET ?'
+      params = [pageSize, offset]
+    }
+
+    const [data, total] = await Promise.all([
+      db
+        .prepare(query)
+        .bind(...params)
+        .all(),
+      db
+        .prepare(countQuery)
+        .bind(...countParams)
+        .first(),
+    ])
+
     return NextResponse.json({
       code: 0,
-      data: res.results,
-      message: 'Recipes fetched successfully',
+      data: {
+        list: data.results,
+        pagination: {
+          current: page,
+          pageSize,
+          total: total?.total || 0,
+        },
+      },
+      message: '获取菜谱列表成功',
     })
   } catch (error) {
-    return NextResponse.json({ code: -1, error: 'Failed to fetch recipes' })
+    return NextResponse.json({ code: -1, error: '获取菜谱列表失败' })
   }
 }
 

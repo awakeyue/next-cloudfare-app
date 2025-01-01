@@ -15,6 +15,7 @@
     "db:init-remote": "wrangler d1 execute recipes-db --remote --file=./db/recipes.sql",
     "db:clear": "wrangler d1 execute recipes-db --file=./db/recipes_clear.sql",
     "db:clear-remote": "wrangler d1 execute recipes-db --remote --file=./db/recipes_clear.sql",
+    "db:delete": "wrangler d1 delete recipes-db",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "@cloudflare/next-on-pages": "1",
     "@cloudflare/workers-types": "^4.20241205.0",
     "@iconify-json/material-symbols": "^1.2.12",
+    "@tailwindcss/typography": "^0.5.15",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

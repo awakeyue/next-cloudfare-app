@@ -29,7 +29,7 @@ pages_build_output_dir = ".vercel/output/static"
 [[d1_databases]]
 binding = "DB"
 database_name = "recipes-db"
-database_id = "850d96dc-60f7-4cc2-a95d-ca9331193d93"
+database_id = "a2ef307a-615b-4aba-87a8-33ab5a22078a"
 
 # Bind a Durable Object. Durable objects are a scale-to-zero compute primitive based on the actor model.
 # Durable Objects can live for as long as needed. Use these when you need a long-running "server", such as in realtime apps.

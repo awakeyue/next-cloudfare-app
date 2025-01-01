@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react'
 import MDEditor from '@uiw/react-md-editor'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { marked } from 'marked'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -65,38 +64,72 @@ export default function EditPage() {
   }, [])
 
   return (
-    <div className="flex h-[100vh] flex-col items-center bg-gray-50 p-6">
-      <div className="flex h-full w-full flex-col md:w-[80vw] lg:w-[70vw]">
-        <h1 className="mb-4 text-xl font-bold text-gray-800">Edit Recipe</h1>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 px-4 py-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-800 md:text-3xl">
+            编辑食谱
+          </h1>
+          <div className="flex items-center space-x-3">
+            <Link replace href="/cooking/list" className="inline-flex">
+              <Button
+                variant="outline"
+                className="w-full hover:bg-gray-100"
+                type="button"
+              >
+                取消
+              </Button>
+            </Link>
+            <Button onClick={handleSave} className="">
+              保存
+            </Button>
+          </div>
+        </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-4 rounded-lg bg-white p-6 shadow-md">
-          <Input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Recipe Title"
-            className="w-full"
-          />
+        <div className="flex flex-col gap-6 rounded-xl bg-white p-6 shadow-lg">
+          <div className="space-y-2">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700"
+            >
+              标题
+            </label>
+            <Input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="请输入食谱标题"
+              className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
 
-          <div className="min-h-0 flex-1 gap-6 overflow-y-auto rounded-lg">
-            {
+          <div className="flex-1 space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              内容
+            </label>
+            <div className="min-h-[500px] rounded-lg border">
               <MDEditor
                 value={content}
                 onChange={(text) => handleChange(text ? text : '')}
-                height={'100%'}
+                height="100%"
+                className="!border-0"
               />
-            }
+            </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end space-x-4">
-            <Button variant="outline">
-              <Link replace href="/cooking/list">
-                取消
-              </Link>
-            </Button>
-            <Button onClick={handleSave}>保存</Button>
-          </div>
+          {imageUrl && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                预览图
+              </label>
+              <img
+                src={imageUrl}
+                alt="Recipe preview"
+                className="h-48 w-full rounded-lg object-cover"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

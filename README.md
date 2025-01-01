@@ -68,3 +68,10 @@ After doing this you can run the `dev` or `preview` script and visit the `/api/h
 ##### Wrangler commands（命令行操作 D1 数据库）
 
 https://developers.cloudflare.com/d1/wrangler-commands/
+
+##### 异常问题
+
+- [ERROR] write EOF
+
+  - 问题描述：执行wrangler d1的某些命令时，出现错误
+  - 解决方法：去node目录，执行install_tools.bat，(参考issue)[https://github.com/cloudflare/workers-sdk/issues/3698]

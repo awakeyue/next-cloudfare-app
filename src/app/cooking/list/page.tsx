@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Trash2, Home } from 'lucide-react'
+import { Trash2, Home, Search } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -25,21 +25,34 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
+import { Input } from '@/components/ui/input'
 
 function ListSkeleton() {
   return (
-    <div className="flex flex-wrap p-4">
+    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
       {[...Array(12)].map((item, index) => (
-        <div
-          key={index}
-          className="flex w-1/2 flex-col gap-2 p-2 sm:w-1/3 md:w-1/4 lg:w-1/5 xl:w-1/6"
-        >
+        <div key={index} className="flex flex-col gap-2">
           <Skeleton className="h-4 w-[80%]" />
-          <Skeleton className="h-[200px] w-full" />
+          <Skeleton className="aspect-square w-full" />
         </div>
       ))}
     </div>
   )
+}
+
+interface PaginationData {
+  current: number
+  pageSize: number
+  total: number
+}
+
+interface ApiResponse {
+  code: number
+  data: {
+    list: Recipe[]
+    pagination: PaginationData
+  }
+  message: string
 }
 
 export default function Page() {
@@ -47,6 +60,12 @@ export default function Page() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [curRecipe, setCurRecipe] = useState<Recipe | null>(null)
+  const [pagination, setPagination] = useState<PaginationData>({
+    current: 1,
+    pageSize: 20,
+    total: 0,
+  })
+  const [keyword, setKeyword] = useState('')
   const { toast } = useToast()
 
   const deleteRecipe = async () => {
@@ -72,82 +91,153 @@ export default function Page() {
     }
   }
 
-  const getData = async () => {
+  const getData = async (page: number = 1, searchKeyword: string = '') => {
     setLoading(true)
-    const res = await fetch('/api/recipes')
-    const data = (await res.json()) as any
-    if (data.code === 0) {
-      setList(data.data)
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: pagination.pageSize.toString(),
+        search: searchKeyword,
+      })
+
+      const res = await fetch(`/api/recipes?${params.toString()}`)
+      const data = (await res.json()) as ApiResponse
+      if (data.code === 0) {
+        setList(data.data.list)
+        setPagination(data.data.pagination)
+      }
+    } catch (error) {
+      toast({
+        description: '获取菜谱列表失败',
+        variant: 'destructive',
+      })
     }
     setLoading(false)
   }
+
   useEffect(() => {
     getData()
   }, [])
+
+  const handlePageChange = (page: number) => {
+    getData(page)
+  }
+
   return (
-    <>
-      <div className="p-4">
-        <Button variant="ghost" asChild>
+    <div className="min-h-screen bg-gray-50">
+      <div className="sticky top-0 z-10 bg-white/80 py-2 backdrop-blur-sm">
+        <div className="container mx-auto flex items-center justify-between px-4">
           <Link replace href="/cooking">
-            <Home className="mr-2 h-4 w-4" />
-            返回首页
+            <Button variant="ghost">
+              <Home className="mr-1 h-4 w-4" />
+              返回首页
+            </Button>
           </Link>
-        </Button>
+
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+            <Input
+              className="pl-10"
+              placeholder="搜索菜谱..."
+              value={keyword}
+              onChange={(e) => {
+                setKeyword(e.target.value)
+              }}
+              onKeyUp={(e) => {
+                if (e.key === 'Enter') {
+                  getData(1, keyword)
+                }
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {loading && <ListSkeleton />}
       {!loading && (
-        <div className="flex flex-wrap p-4">
-          {list.map((item) => (
-            <div
-              key={item.id}
-              className="w-1/2 p-2 sm:w-1/3 md:w-1/4 lg:w-1/5 xl:w-1/6"
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>{item.title}</CardTitle>
-                  {/* <CardDescription>输入菜名，自动生成做菜步骤</CardDescription> */}
+        <>
+          <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            {list.map((item) => (
+              <Card key={item.id} className="flex flex-col">
+                <CardHeader className="flex-none">
+                  <CardTitle
+                    className="line-clamp-1 text-lg"
+                    title={item.title}
+                  >
+                    {item.title}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="bg-slate-300">
+                <CardContent className="flex-1">
+                  <div className="overflow-hidden rounded-md bg-gray-100">
                     {item.image_url && (
                       <Image
                         src={item.image_url}
                         width={0}
                         height={0}
-                        sizes="100vw"
-                        alt=""
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        alt={item.title}
                         placeholder="empty"
-                        className="h-[160px] w-full object-contain"
-                      ></Image>
+                        className="aspect-square h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
                     )}
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <p className="flex w-full justify-end gap-2">
+                <CardFooter className="flex-none">
+                  <div className="flex w-full items-center justify-end gap-2">
                     <Button
-                      variant="link"
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-600"
                       onClick={() => {
                         setCurRecipe(item)
                         setOpen(true)
                       }}
                     >
-                      <Trash2 />
+                      <Trash2 className="mr-1 h-4 w-4" />
                       删除
                     </Button>
-                    <Button variant="link">
-                      <Link href={'/cooking/edit/' + item.id}>编辑</Link>
-                    </Button>
-                    <Button>
-                      <Link href={'/cooking/list/' + item.id}>查看</Link>
-                    </Button>
-                  </p>
+                    <Link href={'/cooking/edit/' + item.id}>
+                      <Button variant="outline" size="sm">
+                        编辑
+                      </Button>
+                    </Link>
+                    <Link href={'/cooking/list/' + item.id}>
+                      <Button size="sm">查看</Button>
+                    </Link>
+                  </div>
                 </CardFooter>
               </Card>
+            ))}
+          </div>
+
+          <div className="flex justify-center py-4">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={pagination.current === 1}
+                onClick={() => handlePageChange(pagination.current - 1)}
+              >
+                上一页
+              </Button>
+              <div className="flex items-center px-4">
+                第 {pagination.current} 页 / 共{' '}
+                {Math.ceil(pagination.total / pagination.pageSize)} 页
+              </div>
+              <Button
+                variant="outline"
+                disabled={
+                  pagination.current >=
+                  Math.ceil(pagination.total / pagination.pageSize)
+                }
+                onClick={() => handlePageChange(pagination.current + 1)}
+              >
+                下一页
+              </Button>
             </div>
-          ))}
-        </div>
+          </div>
+        </>
       )}
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
@@ -165,6 +255,6 @@ export default function Page() {
         </DialogContent>
         <DialogClose />
       </Dialog>
-    </>
+    </div>
   )
 }

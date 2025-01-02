@@ -126,10 +126,10 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="sticky top-0 z-10 bg-white/80 py-2 backdrop-blur-sm">
-        <div className="container mx-auto flex items-center justify-between px-4">
+        <div className="flex items-center p-4">
           <Link replace href="/cooking">
             <Button variant="ghost">
-              <Home className="mr-1 h-4 w-4" />
+              <Home className="h-4 w-4" />
               返回首页
             </Button>
           </Link>

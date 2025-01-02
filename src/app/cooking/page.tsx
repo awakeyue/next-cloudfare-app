@@ -1,10 +1,11 @@
 'use client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useRef, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { useRef, useState, useMemo, useEffect } from 'react'
 import { marked } from 'marked'
 import './markdown.css'
-import { BookAudio, Save } from 'lucide-react'
+import { BookAudio, Save, Link as LinkIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import {
@@ -19,7 +20,6 @@ import {
 } from '@/components/ui/alert-dialog'
 
 import { useRouter } from 'next/navigation'
-import { Recipe } from '#/recipes'
 
 interface ApiResponse {
   code: number
@@ -31,8 +31,26 @@ interface ApiResponse {
   error?: string
 }
 
+function debounce<T extends (...args: any[]) => void>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null
+
+  return function (...args: Parameters<T>) {
+    if (timeout) {
+      clearTimeout(timeout)
+    }
+
+    timeout = setTimeout(() => {
+      func(...args)
+    }, wait)
+  }
+}
+
 export default function Page() {
   const [value, setValue] = useState('')
+  const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [imgUrl, setImgUrl] = useState('')
   const { toast } = useToast()
@@ -48,6 +66,35 @@ export default function Page() {
   >([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
+
+  const debouncedFetchSuggestions = useMemo(
+    () =>
+      debounce((search: string) => {
+        if (!search) {
+          setSuggestions([])
+          return
+        }
+
+        fetch(
+          `/api/recipes?search=${encodeURIComponent(search)}&page=${1}&size=${3}`
+        )
+          .then((res) => res.json() as any)
+          .then((data) => {
+            if (data.code === 0) {
+              setSuggestions(data.data.list)
+            }
+          })
+          .catch((error) => {
+            console.error('Failed to fetch suggestions:', error)
+          })
+      }, 1000),
+    [setSuggestions]
+  )
 
   const handleGenerate = () => {
     if (value === '') {
@@ -57,6 +104,7 @@ export default function Page() {
       })
       return
     }
+    setTitle('')
     setContent('')
     setSuggestions([])
     setIsLoading(true)
@@ -201,26 +249,6 @@ export default function Page() {
       throw error
     }
   }
-  const fetchSuggestions: (search: string) => Promise<void> = async (
-    search
-  ) => {
-    if (!search) {
-      setSuggestions([])
-      return
-    }
-
-    try {
-      const res = await fetch(
-        `/api/recipes?search=${encodeURIComponent(search)}&page=${1}&size=${3}`
-      )
-      const data = (await res.json()) as any
-      if (data.code === 0) {
-        setSuggestions(data.data.list)
-      }
-    } catch (error) {
-      console.error('Failed to fetch suggestions:', error)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-4">
@@ -236,28 +264,38 @@ export default function Page() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="min-w-0 flex-1">
               <Input
+                ref={inputRef}
                 placeholder="请输入想做的菜名..."
                 className="w-full text-lg"
                 value={value}
                 onChange={(e) => {
                   setValue(e.target.value)
-                  fetchSuggestions(e.target.value)
+                  debouncedFetchSuggestions(e.target.value)
                 }}
                 onKeyUp={handleKeyUp}
               />
               {suggestions.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {suggestions.slice(0, 3).map((suggestion) => (
-                    <div
-                      key={suggestion.id}
-                      onClick={() => {
-                        router.push(`/cooking/list/${suggestion.id}`)
-                      }}
-                      className="cursor-pointer rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      {suggestion.title}
+                <div className="mt-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">
+                      已保存的菜谱：
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestions.slice(0, 3).map((suggestion) => (
+                        <Badge
+                          key={suggestion.id}
+                          title={'去查看'}
+                          onClick={() => {
+                            router.push(`/cooking/list/${suggestion.id}`)
+                          }}
+                          className="flex cursor-pointer gap-1"
+                        >
+                          <LinkIcon size={12} />
+                          <span>{suggestion.title}</span>
+                        </Badge>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -306,13 +344,14 @@ export default function Page() {
           {content && (
             <div className="mt-8 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">{value}</h2>
+                <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
                 <Button
                   onClick={() => handleSave(false)}
                   variant="ghost"
+                  disabled={isLoading}
                   className="hover:bg-gray-100"
                 >
-                  <Save className="mr-2 h-5 w-5" />
+                  <Save className="h-5 w-5" />
                   保存菜谱
                 </Button>
               </div>
